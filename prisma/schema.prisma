@@ -1,0 +1,43 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            Int      @id @default(autoincrement())
+  name          String
+  email         String   @unique
+  status  String  @default("active") // Add a status field, default is "active"
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  invitesSent   Invite[] @relation("Inviter")
+  invitesReceived Invite[] @relation("Invitee")
+  nights        Night[]  @relation("UserNights")
+}
+
+model Night {
+  id        Int      @id @default(autoincrement())
+  title     String
+  date      DateTime
+  location  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  users     User[]   @relation("UserNights") // Many-to-many via Invite
+  invites   Invite[] @relation("NightInvites")
+}
+model Invite {
+  id        Int      @id @default(autoincrement())
+  nightId   Int
+  inviterId Int      @default(1)  // Example default value
+  inviteeId Int      @default(1)  // Example default value
+  status    String   // "Pending", "Accepted", "Declined"
+  createdAt DateTime @default(now())
+
+  night     Night    @relation("NightInvites", fields: [nightId], references: [id])
+  inviter   User     @relation("Inviter", fields: [inviterId], references: [id])
+  invitee   User     @relation("Invitee", fields: [inviteeId], references: [id])
+}
